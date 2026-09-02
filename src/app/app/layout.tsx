@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { Sidebar } from "@/components/app/sidebar";
 
+export const dynamic = "force-dynamic";
+
 export default async function AppLayout({
   children,
 }: {
