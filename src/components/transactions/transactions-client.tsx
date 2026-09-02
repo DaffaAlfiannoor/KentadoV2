@@ -234,7 +234,7 @@ export function TransactionsClient({
                               ? "Terjual"
                               : t.purpose === "produksi"
                                 ? "Terpakai produksi"
-                                : ""}
+                                : t.purpose}
                           </span>
                         ) : null}
                         {t.note ? <span className="truncate">{t.note}</span> : null}

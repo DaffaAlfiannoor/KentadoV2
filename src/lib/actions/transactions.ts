@@ -15,7 +15,7 @@ const schema = z
     categoryId: z.coerce.number().int().positive(),
     qty: z.coerce.number().int().positive("Jumlah harus lebih dari 0."),
     unitPrice: z.coerce.number().int().nonnegative().optional(),
-    purpose: z.enum(["terjual", "produksi"]).optional(),
+    purpose: z.string().trim().max(200).optional(),
     note: z.string().trim().max(200).optional(),
     date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Tanggal tidak valid."),
   })

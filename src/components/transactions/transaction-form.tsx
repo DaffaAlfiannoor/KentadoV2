@@ -327,21 +327,15 @@ export function TransactionForm({
             </div>
           ) : (
             <div className="flex flex-col gap-2">
-              <Label htmlFor="purpose">Tujuan</Label>
-              <Select
-                value={purpose}
-                onValueChange={(v) => setPurpose(v ?? "")}
+              <Label htmlFor="purpose">Tujuan (opsional)</Label>
+              <Input
+                id="purpose"
                 name="purpose"
-                items={{ terjual: "Terjual", produksi: "Terpakai produksi" }}
-              >
-                <SelectTrigger id="purpose" className="w-full">
-                  <SelectValue placeholder="Pilih tujuan" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="terjual">Terjual</SelectItem>
-                  <SelectItem value="produksi">Terpakai produksi</SelectItem>
-                </SelectContent>
-              </Select>
+                value={purpose}
+                onChange={(e) => setPurpose(e.target.value)}
+                placeholder="cth. Terjual, dipakai produksi"
+                maxLength={200}
+              />
             </div>
           )}
         </div>
