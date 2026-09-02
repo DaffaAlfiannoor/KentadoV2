@@ -327,7 +327,7 @@ export function TransactionForm({
             </div>
           ) : (
             <div className="flex flex-col gap-2">
-              <Label htmlFor="purpose">Tujuan (opsional)</Label>
+              <Label htmlFor="purpose">Tujuan</Label>
               <Input
                 id="purpose"
                 name="purpose"
