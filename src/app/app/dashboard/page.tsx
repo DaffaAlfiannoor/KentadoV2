@@ -21,7 +21,7 @@ export default async function DashboardPage() {
         description="Gambaran stok terkini per kategori."
       />
 
-      <div className="grid grid-cols-1 gap-4 p-6 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-3 sm:p-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
@@ -63,7 +63,7 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      <div className="flex flex-col gap-6 px-6 pb-10">
+      <div className="flex flex-col gap-6 px-4 pb-10 sm:px-6">
         {summary.length === 0 ? (
           <EmptyState
             title="Belum ada kategori"

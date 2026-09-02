@@ -16,10 +16,10 @@ export default async function AppLayout({
   }
 
   return (
-    <div className="flex min-h-[100dvh] w-full bg-background">
-      <Sidebar />
+    <div className="flex min-h-[100dvh] w-full flex-col bg-background lg:flex-row">
+      <Sidebar username={session.username} />
       <main className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
-        <div className="flex h-16 shrink-0 items-center justify-end border-b bg-card/60 px-6">
+        <div className="hidden h-16 shrink-0 items-center justify-end border-b bg-card/60 px-4 sm:px-6 lg:flex">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span className="font-medium text-foreground">{session.username}</span>
           </div>

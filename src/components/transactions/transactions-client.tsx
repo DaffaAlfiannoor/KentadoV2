@@ -95,7 +95,7 @@ export function TransactionsClient({
   };
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6 p-4 sm:p-6">
       <div className="grid grid-cols-2 gap-4 rounded-xl border bg-card p-4 md:grid-cols-3 lg:grid-cols-6">
         <div className="col-span-2 flex flex-col gap-1.5 md:col-span-1">
           <Label>Kategori</Label>

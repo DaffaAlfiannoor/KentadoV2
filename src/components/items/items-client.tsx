@@ -175,8 +175,8 @@ export function ItemsClient({ items, categories }: { items: ItemRow[]; categorie
   };
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-6 p-4 sm:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">
           {items.length} barang terdaftar. Stok dihitung otomatis dari riwayat transaksi.
         </p>

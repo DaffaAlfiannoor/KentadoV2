@@ -109,8 +109,8 @@ export function CategoriesClient({ categories }: { categories: CategoryRow[] }) 
   const [deleting, setDeleting] = useState<CategoryRow | null>(null);
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-6 p-4 sm:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">
           {categories.length} kategori. Kategori yang berisi barang tidak dapat dihapus.
         </p>

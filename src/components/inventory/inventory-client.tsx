@@ -131,7 +131,7 @@ export function InventoryClient({
   }, [rows, query, categoryId, sortAsc]);
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6 p-4 sm:p-6">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
           icon={<Package size={16} weight="duotone" />}
@@ -196,7 +196,7 @@ export function InventoryClient({
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">
           {filtered.length} barang ditampilkan
         </p>

@@ -30,7 +30,7 @@ export default async function NewTransactionPage({
         title="Tambah Transaksi"
         description="Catat barang masuk atau keluar."
       />
-      <div className="max-w-2xl p-6">
+      <div className="max-w-2xl p-4 sm:p-6">
         <TransactionForm
           categories={categories}
           itemsByCategory={itemsByCategory}
