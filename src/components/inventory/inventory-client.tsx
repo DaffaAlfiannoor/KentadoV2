@@ -72,13 +72,13 @@ function StatCard({
   suffix?: string;
 }) {
   return (
-    <div className="rounded-xl border bg-card p-5">
+    <div className="rounded-xl border bg-card p-4 sm:p-5">
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
           {icon}
           {label}
         </div>
-        <p className="font-mono text-2xl font-semibold tracking-tight tabular-nums text-foreground">
+        <p className="break-all font-mono text-base font-semibold tracking-tight tabular-nums text-foreground sm:text-2xl">
           {value}
           {suffix ? (
             <span className="ml-1 text-sm font-normal text-muted-foreground">
