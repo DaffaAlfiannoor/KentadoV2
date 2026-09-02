@@ -56,29 +56,33 @@ export async function getCategories() {
 }
 
 export async function getItems() {
-  const stock = await getStockMap();
-  const rows = await db
-    .select({
-      id: items.id,
-      name: items.name,
-      unit: items.unit,
-      createdAt: items.createdAt,
-      categoryId: items.categoryId,
-      categoryName: categories.name,
-    })
-    .from(items)
-    .innerJoin(categories, eq(items.categoryId, categories.id))
-    .orderBy(asc(categories.name), asc(items.name));
+  const [stock, rows] = await Promise.all([
+    getStockMap(),
+    db
+      .select({
+        id: items.id,
+        name: items.name,
+        unit: items.unit,
+        createdAt: items.createdAt,
+        categoryId: items.categoryId,
+        categoryName: categories.name,
+      })
+      .from(items)
+      .innerJoin(categories, eq(items.categoryId, categories.id))
+      .orderBy(asc(categories.name), asc(items.name)),
+  ]);
   return rows.map((row) => ({ ...row, stock: stock.get(row.id) ?? 0 }));
 }
 
 export async function getItemsByCategory(categoryId: number) {
-  const stock = await getStockMap();
-  const rows = await db
-    .select({ id: items.id, name: items.name, unit: items.unit, categoryId: items.categoryId })
-    .from(items)
-    .where(eq(items.categoryId, categoryId))
-    .orderBy(asc(items.name));
+  const [stock, rows] = await Promise.all([
+    getStockMap(),
+    db
+      .select({ id: items.id, name: items.name, unit: items.unit, categoryId: items.categoryId })
+      .from(items)
+      .where(eq(items.categoryId, categoryId))
+      .orderBy(asc(items.name)),
+  ]);
   return rows.map((row) => ({ ...row, stock: stock.get(row.id) ?? 0 }));
 }
 
