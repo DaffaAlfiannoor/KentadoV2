@@ -81,6 +81,11 @@ export function TransactionForm({
   const [txState, txAction, txPending] = useActionState(createTransaction, initialTxState);
   const [addState, addAction, addPending] = useActionState(addItemInline, initialAddState);
 
+  const categoryOptions = useMemo(
+    () => categories.map((c) => ({ value: String(c.id), label: c.name })),
+    [categories]
+  );
+
   const categoryItems = useMemo(() => {
     const id = Number(categoryId);
     if (!id) return [];
@@ -196,7 +201,7 @@ export function TransactionForm({
 
         <div className="flex flex-col gap-2">
           <Label htmlFor="category">Kategori</Label>
-          <Select value={categoryId} onValueChange={selectCategory}>
+          <Select items={categoryOptions} value={categoryId} onValueChange={selectCategory}>
             <SelectTrigger id="category" className="w-full">
               <SelectValue placeholder="Pilih kategori" />
             </SelectTrigger>
@@ -323,7 +328,12 @@ export function TransactionForm({
           ) : (
             <div className="flex flex-col gap-2">
               <Label htmlFor="purpose">Tujuan</Label>
-              <Select value={purpose} onValueChange={(v) => setPurpose(v ?? "")} name="purpose">
+              <Select
+                value={purpose}
+                onValueChange={(v) => setPurpose(v ?? "")}
+                name="purpose"
+                items={{ terjual: "Terjual", produksi: "Terpakai produksi" }}
+              >
                 <SelectTrigger id="purpose" className="w-full">
                   <SelectValue placeholder="Pilih tujuan" />
                 </SelectTrigger>

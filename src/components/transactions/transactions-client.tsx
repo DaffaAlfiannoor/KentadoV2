@@ -57,6 +57,22 @@ export function TransactionsClient({
     [categoryId, items]
   );
 
+  const categoryOptions = useMemo(
+    () => [
+      { value: "all", label: "Semua" },
+      ...categories.map((c) => ({ value: String(c.id), label: c.name })),
+    ],
+    [categories]
+  );
+
+  const itemOptions = useMemo(
+    () => [
+      { value: "all", label: "Semua" },
+      ...items.map((i) => ({ value: String(i.id), label: i.name })),
+    ],
+    [items]
+  );
+
   const rows = useMemo(() => {
     return transactions.filter((t) => {
       if (categoryId !== "all" && t.categoryName !== categories.find((c) => c.id === Number(categoryId))?.name) {
@@ -83,7 +99,11 @@ export function TransactionsClient({
       <div className="grid grid-cols-2 gap-4 rounded-xl border bg-card p-4 md:grid-cols-3 lg:grid-cols-6">
         <div className="col-span-2 flex flex-col gap-1.5 md:col-span-1">
           <Label>Kategori</Label>
-          <Select value={categoryId} onValueChange={(v) => setCategoryId(v ?? "all")}>
+          <Select
+            items={categoryOptions}
+            value={categoryId}
+            onValueChange={(v) => setCategoryId(v ?? "all")}
+          >
             <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>
@@ -100,7 +120,11 @@ export function TransactionsClient({
 
         <div className="col-span-2 flex flex-col gap-1.5 md:col-span-1">
           <Label>Barang</Label>
-          <Select value={itemId} onValueChange={(v) => setItemId(v ?? "all")}>
+          <Select
+            items={itemOptions}
+            value={itemId}
+            onValueChange={(v) => setItemId(v ?? "all")}
+          >
             <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>

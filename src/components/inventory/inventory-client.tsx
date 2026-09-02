@@ -106,6 +106,14 @@ export function InventoryClient({
   const [categoryId, setCategoryId] = useState<string>("all");
   const [sortAsc, setSortAsc] = useState(true);
 
+  const categoryOptions = useMemo(
+    () => [
+      { value: "all", label: "Semua kategori" },
+      ...categories.map((c) => ({ value: String(c.id), label: c.name })),
+    ],
+    [categories]
+  );
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     let list = rows;
@@ -168,7 +176,11 @@ export function InventoryClient({
         </div>
         <div className="flex flex-col gap-1.5">
           <Label>Filter kategori</Label>
-          <Select value={categoryId} onValueChange={(v) => setCategoryId(v ?? "all")}>
+          <Select
+            items={categoryOptions}
+            value={categoryId}
+            onValueChange={(v) => setCategoryId(v ?? "all")}
+          >
             <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>

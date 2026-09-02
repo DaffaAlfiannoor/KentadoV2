@@ -58,6 +58,10 @@ function ItemForm({
   onDone: () => void;
 }) {
   const [state, formAction, pending] = useActionState(upsertItem, initialState);
+  const categoryOptions = categories.map((c) => ({
+    value: String(c.id),
+    label: c.name,
+  }));
 
   useEffect(() => {
     if (state.success) onDone();
@@ -78,6 +82,7 @@ function ItemForm({
         <Label>Kategori</Label>
         <Select
           name="categoryId"
+          items={categoryOptions}
           defaultValue={item ? String(item.categoryId) : String(categories[0]?.id)}
         >
           <SelectTrigger className="w-full">
