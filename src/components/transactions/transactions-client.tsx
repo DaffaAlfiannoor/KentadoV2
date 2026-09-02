@@ -1,11 +1,19 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { ArrowsDownUp, Funnel, WarningCircle } from "@phosphor-icons/react";
+import { useActionState, useEffect, useMemo, useState } from "react";
+import { ArrowsDownUp, Funnel, Trash, WarningCircle } from "@phosphor-icons/react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -24,11 +32,48 @@ import {
 import { TransactionTypeBadge } from "@/components/app/transaction-type-badge";
 import { EmptyState } from "@/components/app/page-header";
 import { formatDate, formatIDR, formatNumber } from "@/lib/format";
+import { deleteTransaction } from "@/lib/actions/transactions";
 import type { TransactionRow } from "@/lib/queries";
 import type { TransactionType } from "@/db/types";
 
 type Category = { id: number; name: string };
 type Item = { id: number; name: string; categoryId: number };
+
+const initialDeleteState: { error?: string; success?: boolean } = {};
+
+function DeleteTransactionForm({
+  transactionId,
+  onDone,
+}: {
+  transactionId: number;
+  onDone: () => void;
+}) {
+  const [state, formAction, pending] = useActionState(
+    deleteTransaction,
+    initialDeleteState
+  );
+
+  useEffect(() => {
+    if (state.success) onDone();
+  }, [state.success, onDone]);
+
+  return (
+    <form action={formAction} className="flex flex-col gap-4">
+      <input type="hidden" name="id" value={transactionId} />
+      {state.error ? (
+        <p className="text-sm text-destructive">{state.error}</p>
+      ) : null}
+      <DialogFooter>
+        <Button type="button" variant="outline" onClick={onDone}>
+          Batal
+        </Button>
+        <Button type="submit" variant="destructive" disabled={pending}>
+          {pending ? "Menghapus..." : "Hapus"}
+        </Button>
+      </DialogFooter>
+    </form>
+  );
+}
 
 export function TransactionsClient({
   transactions,
@@ -93,6 +138,8 @@ export function TransactionsClient({
     setFrom("");
     setTo("");
   };
+
+  const [deleting, setDeleting] = useState<TransactionRow | null>(null);
 
   return (
     <div className="flex flex-col gap-6 p-4 sm:p-6">
@@ -209,7 +256,22 @@ export function TransactionsClient({
                     <TableCell className="whitespace-nowrap text-muted-foreground">
                       {formatDate(t.date)}
                     </TableCell>
-                    <TableCell className="font-medium">{t.itemName}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <span>{t.itemName}</span>
+                        {t.itemId == null ? (
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            className="text-destructive"
+                            onClick={() => setDeleting(t)}
+                            aria-label="Hapus transaksi"
+                          >
+                            <Trash />
+                          </Button>
+                        ) : null}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-muted-foreground">
                       {t.categoryName ?? "-"}
                     </TableCell>
@@ -247,6 +309,24 @@ export function TransactionsClient({
           </div>
         </div>
       )}
+
+      {deleting ? (
+        <Dialog open onOpenChange={(o) => !o && setDeleting(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Hapus transaksi</DialogTitle>
+              <DialogDescription>
+                Transaksi ini tidak terhubung ke barang apa pun dan akan
+                dihapus permanen. Tindakan tidak dapat dibatalkan.
+              </DialogDescription>
+            </DialogHeader>
+            <DeleteTransactionForm
+              transactionId={deleting.id}
+              onDone={() => setDeleting(null)}
+            />
+          </DialogContent>
+        </Dialog>
+      ) : null}
     </div>
   );
 }

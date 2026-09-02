@@ -108,3 +108,24 @@ export async function createTransaction(
   revalidatePath("/app/items");
   return { success: true };
 }
+
+export async function deleteTransaction(
+  _prev: TransactionActionResult,
+  formData: FormData
+): Promise<TransactionActionResult> {
+  const id = Number(formData.get("id"));
+  if (!id) return { error: "Transaksi tidak ditemukan." };
+
+  const [tx] = await db
+    .select({ id: transactions.id, itemId: transactions.itemId })
+    .from(transactions)
+    .where(eq(transactions.id, id));
+  if (!tx) return { error: "Transaksi tidak ditemukan." };
+  if (tx.itemId != null) {
+    return { error: "Hanya transaksi tanpa barang yang dapat dihapus." };
+  }
+
+  await db.delete(transactions).where(eq(transactions.id, id));
+  revalidatePath("/app/transactions");
+  return { success: true };
+}
