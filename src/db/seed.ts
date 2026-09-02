@@ -10,7 +10,7 @@ async function main() {
 
   const adminRows = await db.select().from(admins);
   if (adminRows.length === 0) {
-    const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD ?? "kentado2026", 12);
+    const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD || "kentado2026", 12);
     await db.insert(admins).values({ username: "admin", passwordHash });
     console.log("Created default admin (username: admin).");
   } else {
