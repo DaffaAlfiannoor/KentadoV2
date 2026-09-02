@@ -27,11 +27,12 @@ async function main() {
     const [item] = await db
       .insert(items)
       .values({ categoryId: cat.id, name: "Serbuk Te'gi Karate", unit: "kg" })
-      .returning({ id: items.id });
+      .returning({ id: items.id, name: items.name });
 
     await db.insert(transactions).values([
       {
         itemId: item.id,
+        itemName: item.name,
         type: "in",
         qty: 100,
         unitPrice: 12000,
@@ -41,6 +42,7 @@ async function main() {
       },
       {
         itemId: item.id,
+        itemName: item.name,
         type: "out",
         qty: 20,
         purpose: "produksi",

@@ -82,7 +82,7 @@ export async function createTransaction(
   }
 
   const [itemExists] = await db
-    .select({ id: items.id })
+    .select({ id: items.id, name: items.name })
     .from(items)
     .where(eq(items.id, resolvedItemId!));
   if (!itemExists) {
@@ -93,6 +93,7 @@ export async function createTransaction(
 
   await db.insert(transactions).values({
     itemId: resolvedItemId!,
+    itemName: itemExists.name,
     type,
     qty,
     unitPrice: type === "in" ? unitPrice ?? null : null,

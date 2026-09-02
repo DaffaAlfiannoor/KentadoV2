@@ -211,7 +211,7 @@ export function TransactionsClient({
                     </TableCell>
                     <TableCell className="font-medium">{t.itemName}</TableCell>
                     <TableCell className="text-muted-foreground">
-                      {t.categoryName}
+                      {t.categoryName ?? "-"}
                     </TableCell>
                     <TableCell>
                       <TransactionTypeBadge type={t.type} />

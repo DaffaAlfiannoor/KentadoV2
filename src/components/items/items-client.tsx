@@ -280,7 +280,8 @@ export function ItemsClient({ items, categories }: { items: ItemRow[]; categorie
             <DialogHeader>
               <DialogTitle>Hapus barang</DialogTitle>
               <DialogDescription>
-                Yakin ingin menghapus barang ini? Tindakan tidak dapat dibatalkan.
+                Yakin ingin menghapus barang ini? Riwayat transaksinya tetap
+                tersimpan. Tindakan tidak dapat dibatalkan.
               </DialogDescription>
             </DialogHeader>
             <DeleteForm item={deleting} onDone={() => setDeleting(null)} />

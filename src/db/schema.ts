@@ -32,9 +32,8 @@ export const items = pgTable("items", {
 
 export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
-  itemId: integer("item_id")
-    .notNull()
-    .references(() => items.id, { onDelete: "restrict" }),
+  itemId: integer("item_id").references(() => items.id, { onDelete: "set null" }),
+  itemName: text("item_name"),
   type: text("type", { enum: ["in", "out"] }).notNull(),
   qty: integer("qty").notNull(),
   unitPrice: integer("unit_price"),

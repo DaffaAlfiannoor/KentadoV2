@@ -5,7 +5,7 @@ import { z } from "zod";
 import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import { categories, items, transactions } from "@/db/schema";
+import { categories, items } from "@/db/schema";
 
 const schema = z.object({
   id: z.coerce.number().optional(),
@@ -66,19 +66,10 @@ export async function deleteItem(
   const id = Number(formData.get("id"));
   if (!id) return { error: "Barang tidak ditemukan." };
 
-  const txnCount = (
-    await db.select().from(transactions).where(eq(transactions.itemId, id))
-  ).length;
-
-  if (txnCount > 0) {
-    return {
-      error: `Barang memiliki ${txnCount} riwayat transaksi sehingga tidak dapat dihapus.`,
-    };
-  }
-
   await db.delete(items).where(eq(items.id, id));
   revalidatePath("/app/items");
   revalidatePath("/app/dashboard");
+  revalidatePath("/app/transactions");
   return { success: true };
 }
 

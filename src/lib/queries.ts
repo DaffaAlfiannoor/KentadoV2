@@ -6,7 +6,7 @@ import { db } from "@/db";
 import { admins, categories, items, transactions } from "@/db/schema";
 import type { TransactionType } from "@/db/types";
 
-type StockRow = { itemId: number; stock: number };
+type StockRow = { itemId: number | null; stock: number };
 
 const stockExpr = sql<number>`coalesce(sum(case when ${transactions.type} = 'in' then ${transactions.qty} else -${transactions.qty} end), 0)::int`;
 
@@ -23,7 +23,9 @@ async function getStockRows(): Promise<StockRow[]> {
 export async function getStockMap(): Promise<Map<number, number>> {
   const map = new Map<number, number>();
   for (const row of await getStockRows()) {
-    map.set(row.itemId, row.stock);
+    if (row.itemId != null) {
+      map.set(row.itemId, row.stock);
+    }
   }
   return map;
 }
@@ -82,9 +84,9 @@ export async function getItemsByCategory(categoryId: number) {
 
 export type TransactionRow = {
   id: number;
-  itemId: number;
+  itemId: number | null;
   itemName: string;
-  categoryName: string;
+  categoryName: string | null;
   type: TransactionType;
   qty: number;
   unitPrice: number | null;
@@ -115,7 +117,7 @@ export async function getTransactions(filters: TransactionFilters = {}): Promise
     .select({
       id: transactions.id,
       itemId: transactions.itemId,
-      itemName: items.name,
+      itemName: sql<string>`coalesce(${transactions.itemName}, ${items.name})`,
       categoryName: categories.name,
       type: transactions.type,
       qty: transactions.qty,
@@ -127,8 +129,8 @@ export async function getTransactions(filters: TransactionFilters = {}): Promise
       createdAt: transactions.createdAt,
     })
     .from(transactions)
-    .innerJoin(items, eq(transactions.itemId, items.id))
-    .innerJoin(categories, eq(items.categoryId, categories.id))
+    .leftJoin(items, eq(transactions.itemId, items.id))
+    .leftJoin(categories, eq(items.categoryId, categories.id))
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(desc(transactions.date), desc(transactions.id));
 }
