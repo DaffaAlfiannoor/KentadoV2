@@ -31,21 +31,20 @@ export async function upsertCategory(
   }
 
   const { id, name } = parsed.data;
-  const existing = db
+  const categoryRows = await db
     .select()
     .from(categories)
-    .where(eq(categories.name, name))
-    .all()
-    .find((c) => c.id !== id);
+    .where(eq(categories.name, name));
+  const existing = categoryRows.find((c) => c.id !== id);
 
   if (existing) {
     return { error: "Nama kategori sudah digunakan." };
   }
 
   if (id) {
-    db.update(categories).set({ name }).where(eq(categories.id, id)).run();
+    await db.update(categories).set({ name }).where(eq(categories.id, id));
   } else {
-    db.insert(categories).values({ name }).run();
+    await db.insert(categories).values({ name });
   }
 
   revalidatePath("/app/categories");
@@ -60,11 +59,9 @@ export async function deleteCategory(
   const id = Number(formData.get("id"));
   if (!id) return { error: "Kategori tidak ditemukan." };
 
-  const itemCount = db
-    .select()
-    .from(items)
-    .where(eq(items.categoryId, id))
-    .all().length;
+  const itemCount = (
+    await db.select().from(items).where(eq(items.categoryId, id))
+  ).length;
 
   if (itemCount > 0) {
     return {
@@ -72,7 +69,7 @@ export async function deleteCategory(
     };
   }
 
-  db.delete(categories).where(eq(categories.id, id)).run();
+  await db.delete(categories).where(eq(categories.id, id));
   revalidatePath("/app/categories");
   revalidatePath("/app/dashboard");
   return { success: true };

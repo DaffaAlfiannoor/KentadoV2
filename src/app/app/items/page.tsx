@@ -8,9 +8,9 @@ export const metadata: Metadata = {
   title: "Barang",
 };
 
-export default function ItemsPage() {
-  const items = getItems();
-  const categories = getCategories().map((c) => ({ id: c.id, name: c.name }));
+export default async function ItemsPage() {
+  const [items, categoryRows] = await Promise.all([getItems(), getCategories()]);
+  const categories = categoryRows.map((c) => ({ id: c.id, name: c.name }));
 
   return (
     <div className="flex flex-col">

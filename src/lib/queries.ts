@@ -1,5 +1,5 @@
 import "server-only";
-import { sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, lte, sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 
 import { db } from "@/db";
@@ -8,56 +8,54 @@ import type { TransactionType } from "@/db/types";
 
 type StockRow = { itemId: number; stock: number };
 
-function getStockRows(): StockRow[] {
+const stockExpr = sql<number>`coalesce(sum(case when ${transactions.type} = 'in' then ${transactions.qty} else -${transactions.qty} end), 0)::int`;
+
+async function getStockRows(): Promise<StockRow[]> {
   return db
     .select({
       itemId: transactions.itemId,
-      stock: sql<number>`coalesce(sum(case when ${transactions.type} = 'in' then ${transactions.qty} else -${transactions.qty} end), 0)`,
+      stock: stockExpr,
     })
     .from(transactions)
-    .groupBy(transactions.itemId)
-    .all();
+    .groupBy(transactions.itemId);
 }
 
-export function getStockMap(): Map<number, number> {
+export async function getStockMap(): Promise<Map<number, number>> {
   const map = new Map<number, number>();
-  for (const row of getStockRows()) {
+  for (const row of await getStockRows()) {
     map.set(row.itemId, row.stock);
   }
   return map;
 }
 
-export function getItemStock(itemId: number): number {
-  const row = db
-    .select({
-      stock: sql<number>`coalesce(sum(case when ${transactions.type} = 'in' then ${transactions.qty} else -${transactions.qty} end), 0)`,
-    })
+export async function getItemStock(itemId: number): Promise<number> {
+  const [row] = await db
+    .select({ stock: stockExpr })
     .from(transactions)
-    .where(sql`${transactions.itemId} = ${itemId}`)
-    .get();
+    .where(eq(transactions.itemId, itemId));
   return row?.stock ?? 0;
 }
 
-export function getAdminByUsername(username: string) {
-  return db.select().from(admins).where(sql`${admins.username} = ${username}`).get();
+export async function getAdminByUsername(username: string) {
+  const [admin] = await db.select().from(admins).where(eq(admins.username, username));
+  return admin;
 }
 
-export function getCategories() {
+export async function getCategories() {
   return db
     .select({
       id: categories.id,
       name: categories.name,
       createdAt: categories.createdAt,
-      itemCount: sql<number>`(select count(*) from ${items} where ${items.categoryId} = ${categories.id})`,
+      itemCount: sql<number>`(select count(*)::int from ${items} where ${items.categoryId} = ${categories.id})`,
     })
     .from(categories)
-    .orderBy(categories.name)
-    .all();
+    .orderBy(asc(categories.name));
 }
 
-export function getItems() {
-  const stock = getStockMap();
-  return db
+export async function getItems() {
+  const stock = await getStockMap();
+  const rows = await db
     .select({
       id: items.id,
       name: items.name,
@@ -67,21 +65,19 @@ export function getItems() {
       categoryName: categories.name,
     })
     .from(items)
-    .innerJoin(categories, sql`${items.categoryId} = ${categories.id}`)
-    .orderBy(categories.name, items.name)
-    .all()
-    .map((row) => ({ ...row, stock: stock.get(row.id) ?? 0 }));
+    .innerJoin(categories, eq(items.categoryId, categories.id))
+    .orderBy(asc(categories.name), asc(items.name));
+  return rows.map((row) => ({ ...row, stock: stock.get(row.id) ?? 0 }));
 }
 
-export function getItemsByCategory(categoryId: number) {
-  const stock = getStockMap();
-  return db
+export async function getItemsByCategory(categoryId: number) {
+  const stock = await getStockMap();
+  const rows = await db
     .select({ id: items.id, name: items.name, unit: items.unit, categoryId: items.categoryId })
     .from(items)
-    .where(sql`${items.categoryId} = ${categoryId}`)
-    .orderBy(items.name)
-    .all()
-    .map((row) => ({ ...row, stock: stock.get(row.id) ?? 0 }));
+    .where(eq(items.categoryId, categoryId))
+    .orderBy(asc(items.name));
+  return rows.map((row) => ({ ...row, stock: stock.get(row.id) ?? 0 }));
 }
 
 export type TransactionRow = {
@@ -107,45 +103,42 @@ export type TransactionFilters = {
   to?: string;
 };
 
-export function getTransactions(filters: TransactionFilters = {}): TransactionRow[] {
+export async function getTransactions(filters: TransactionFilters = {}): Promise<TransactionRow[]> {
   const conditions: SQL[] = [];
-  if (filters.categoryId) conditions.push(sql`t.item_id IN (SELECT id FROM items WHERE category_id = ${filters.categoryId})`);
-  if (filters.itemId) conditions.push(sql`t.item_id = ${filters.itemId}`);
-  if (filters.type && filters.type !== "all") conditions.push(sql`t.type = ${filters.type}`);
-  if (filters.from) conditions.push(sql`t.date >= ${filters.from}`);
-  if (filters.to) conditions.push(sql`t.date <= ${filters.to}`);
+  if (filters.categoryId) conditions.push(eq(categories.id, filters.categoryId));
+  if (filters.itemId) conditions.push(eq(transactions.itemId, filters.itemId));
+  if (filters.type && filters.type !== "all") conditions.push(eq(transactions.type, filters.type));
+  if (filters.from) conditions.push(gte(transactions.date, filters.from));
+  if (filters.to) conditions.push(lte(transactions.date, filters.to));
 
-  const where = conditions.length
-    ? sql` WHERE ${sql.join(conditions, sql` AND `)}`
-    : sql``;
-
-  const query = sql`
-    SELECT
-      t.id AS id,
-      t.item_id AS itemId,
-      i.name AS itemName,
-      c.name AS categoryName,
-      t.type AS type,
-      t.qty AS qty,
-      t.unit_price AS unitPrice,
-      t.total AS total,
-      t.purpose AS purpose,
-      t.note AS note,
-      t.date AS date,
-      t.created_at AS createdAt
-    FROM transactions t
-    JOIN items i ON i.id = t.item_id
-    JOIN categories c ON c.id = i.category_id
-    ${where}
-    ORDER BY t.date DESC, t.id DESC
-  `;
-  return db.all<TransactionRow>(query);
+  return db
+    .select({
+      id: transactions.id,
+      itemId: transactions.itemId,
+      itemName: items.name,
+      categoryName: categories.name,
+      type: transactions.type,
+      qty: transactions.qty,
+      unitPrice: transactions.unitPrice,
+      total: transactions.total,
+      purpose: transactions.purpose,
+      note: transactions.note,
+      date: transactions.date,
+      createdAt: transactions.createdAt,
+    })
+    .from(transactions)
+    .innerJoin(items, eq(transactions.itemId, items.id))
+    .innerJoin(categories, eq(items.categoryId, categories.id))
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(desc(transactions.date), desc(transactions.id));
 }
 
-export function getDashboardSummary() {
-  const categoriesRows = getCategories();
-  const stock = getStockMap();
-  const itemsRows = getItems();
+export async function getDashboardSummary() {
+  const [categoriesRows, stock, itemsRows] = await Promise.all([
+    getCategories(),
+    getStockMap(),
+    getItems(),
+  ]);
 
   return categoriesRows
     .map((cat) => {
@@ -181,31 +174,20 @@ export type InventorySummary = {
   outCount: number;
 };
 
-export function getInventory(): { rows: InventoryRow[]; summary: InventorySummary } {
-  const query = sql`
-    SELECT
-      i.id AS id,
-      i.name AS name,
-      i.unit AS unit,
-      i.category_id AS categoryId,
-      c.name AS categoryName,
-      coalesce((
-        SELECT sum(case when t.type = 'in' then t.qty else -t.qty end)
-        FROM transactions t WHERE t.item_id = i.id
-      ), 0) AS stock,
-      (
-        SELECT t.unit_price FROM transactions t
-        WHERE t.item_id = i.id AND t.type = 'in' AND t.unit_price IS NOT NULL
-        ORDER BY t.id DESC LIMIT 1
-      ) AS lastInPrice
-    FROM items i
-    JOIN categories c ON c.id = i.category_id
-    ORDER BY i.name
-  `;
-
-  const raw = db.all<
-    Omit<InventoryRow, "value"> & { lastInPrice: number | null }
-  >(query);
+export async function getInventory(): Promise<{ rows: InventoryRow[]; summary: InventorySummary }> {
+  const raw = await db
+    .select({
+      id: items.id,
+      name: items.name,
+      unit: items.unit,
+      categoryId: items.categoryId,
+      categoryName: categories.name,
+      stock: sql<number>`coalesce((select sum(case when t.type = 'in' then t.qty else -t.qty end) from ${transactions} t where t.item_id = ${items.id}), 0)::int`,
+      lastInPrice: sql<number | null>`(select t.unit_price from ${transactions} t where t.item_id = ${items.id} and t.type = 'in' and t.unit_price is not null order by t.id desc limit 1)`,
+    })
+    .from(items)
+    .innerJoin(categories, eq(items.categoryId, categories.id))
+    .orderBy(asc(items.name));
 
   const rows: InventoryRow[] = raw.map((r) => ({
     ...r,

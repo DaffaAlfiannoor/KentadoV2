@@ -8,8 +8,8 @@ export const metadata: Metadata = {
   title: "Kategori",
 };
 
-export default function CategoriesPage() {
-  const categories = getCategories();
+export default async function CategoriesPage() {
+  const categories = await getCategories();
 
   return (
     <div className="flex flex-col">

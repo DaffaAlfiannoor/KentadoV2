@@ -8,9 +8,10 @@ export const metadata: Metadata = {
   title: "Inventori",
 };
 
-export default function InventoryPage() {
-  const { rows, summary } = getInventory();
-  const categories = getCategories().map((c) => ({ id: c.id, name: c.name }));
+export default async function InventoryPage() {
+  const [inventory, categoryRows] = await Promise.all([getInventory(), getCategories()]);
+  const { rows, summary } = inventory;
+  const categories = categoryRows.map((c) => ({ id: c.id, name: c.name }));
 
   return (
     <div className="flex flex-col">

@@ -56,57 +56,51 @@ export async function createTransaction(
   const { type, itemId, itemName, categoryId, qty, unitPrice, purpose, note, date } =
     parsed.data;
 
-  const categoryExists = db
+  const [categoryExists] = await db
     .select()
     .from(categories)
-    .where(eq(categories.id, categoryId))
-    .get();
+    .where(eq(categories.id, categoryId));
   if (!categoryExists) {
     return { error: "Kategori tidak ditemukan." };
   }
 
   let resolvedItemId = itemId;
   if (!resolvedItemId && itemName) {
-    const found = db
+    const [found] = await db
       .select({ id: items.id })
       .from(items)
-      .where(and(eq(items.categoryId, categoryId), eq(items.name, itemName)))
-      .get();
+      .where(and(eq(items.categoryId, categoryId), eq(items.name, itemName)));
     if (found) {
       resolvedItemId = found.id;
     } else {
-      const inserted = db
+      const [inserted] = await db
         .insert(items)
         .values({ categoryId, name: itemName })
-        .returning({ id: items.id })
-        .get();
+        .returning({ id: items.id });
       resolvedItemId = inserted.id;
     }
   }
 
-  const itemExists = db
+  const [itemExists] = await db
     .select({ id: items.id })
     .from(items)
-    .where(eq(items.id, resolvedItemId!))
-    .get();
+    .where(eq(items.id, resolvedItemId!));
   if (!itemExists) {
     return { error: "Barang tidak ditemukan." };
   }
 
   const total = type === "in" && unitPrice ? qty * unitPrice : null;
 
-  db.insert(transactions)
-    .values({
-      itemId: resolvedItemId!,
-      type,
-      qty,
-      unitPrice: type === "in" ? unitPrice ?? null : null,
-      total,
-      purpose: type === "out" ? (purpose ?? null) : null,
-      note: note || null,
-      date,
-    })
-    .run();
+  await db.insert(transactions).values({
+    itemId: resolvedItemId!,
+    type,
+    qty,
+    unitPrice: type === "in" ? unitPrice ?? null : null,
+    total,
+    purpose: type === "out" ? (purpose ?? null) : null,
+    note: note || null,
+    date,
+  });
 
   revalidatePath("/app/transactions");
   revalidatePath("/app/dashboard");

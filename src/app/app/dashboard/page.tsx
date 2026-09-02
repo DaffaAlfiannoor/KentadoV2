@@ -7,8 +7,8 @@ import { PageHeader, EmptyState } from "@/components/app/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-export default function DashboardPage() {
-  const summary = getDashboardSummary();
+export default async function DashboardPage() {
+  const summary = await getDashboardSummary();
   const totalItems = summary.reduce((sum, c) => sum + c.itemCount, 0);
   const emptyItems = summary.flatMap((c) =>
     c.items.filter((i) => i.stock <= 0)

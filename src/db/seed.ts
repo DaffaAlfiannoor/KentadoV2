@@ -1,56 +1,53 @@
-import { migrate } from "drizzle-orm/better-sqlite3/migrator";
+import "./env";
 import bcrypt from "bcryptjs";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
 
 import { db } from "./index";
 import { admins, categories, items, transactions } from "./schema";
 
 async function main() {
-  migrate(db, { migrationsFolder: "./drizzle" });
+  await migrate(db, { migrationsFolder: "./drizzle" });
 
-  const adminCount = db.select().from(admins).all();
-  if (adminCount.length === 0) {
+  const adminRows = await db.select().from(admins);
+  if (adminRows.length === 0) {
     const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD ?? "kentado2026", 12);
-    db.insert(admins).values({ username: "admin", passwordHash }).run();
+    await db.insert(admins).values({ username: "admin", passwordHash });
     console.log("Created default admin (username: admin).");
   } else {
     console.log("Admin already exists, skipping.");
   }
 
-  const catCount = db.select().from(categories).all();
-  if (catCount.length === 0) {
-    const catId = db
+  const categoryRows = await db.select().from(categories);
+  if (categoryRows.length === 0) {
+    const [cat] = await db
       .insert(categories)
       .values({ name: "Bahan Pokok" })
-      .returning({ id: categories.id })
-      .get()!.id;
+      .returning({ id: categories.id });
 
-    const itemId = db
+    const [item] = await db
       .insert(items)
-      .values({ categoryId: catId, name: "Serbuk Te'gi Karate", unit: "kg" })
-      .returning({ id: items.id })
-      .get()!.id;
+      .values({ categoryId: cat.id, name: "Serbuk Te'gi Karate", unit: "kg" })
+      .returning({ id: items.id });
 
-    db.insert(transactions)
-      .values([
-        {
-          itemId,
-          type: "in",
-          qty: 100,
-          unitPrice: 12000,
-          total: 1200000,
-          note: "Stok awal",
-          date: new Date().toISOString().slice(0, 10),
-        },
-        {
-          itemId,
-          type: "out",
-          qty: 20,
-          purpose: "produksi",
-          note: "Produksi batch pertama",
-          date: new Date().toISOString().slice(0, 10),
-        },
-      ])
-      .run();
+    await db.insert(transactions).values([
+      {
+        itemId: item.id,
+        type: "in",
+        qty: 100,
+        unitPrice: 12000,
+        total: 1200000,
+        note: "Stok awal",
+        date: new Date().toISOString().slice(0, 10),
+      },
+      {
+        itemId: item.id,
+        type: "out",
+        qty: 20,
+        purpose: "produksi",
+        note: "Produksi batch pertama",
+        date: new Date().toISOString().slice(0, 10),
+      },
+    ]);
     console.log("Seeded starter data.");
   } else {
     console.log("Categories already exist, skipping seed.");

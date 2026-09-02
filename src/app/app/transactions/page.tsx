@@ -14,9 +14,13 @@ export default async function TransactionsPage({
   searchParams: Promise<{ categoryId?: string }>;
 }) {
   const params = await searchParams;
-  const transactions = getTransactions();
-  const categories = getCategories().map((c) => ({ id: c.id, name: c.name }));
-  const items = getItems().map((i) => ({ id: i.id, name: i.name, categoryId: i.categoryId }));
+  const [transactions, categoryRows, itemRows] = await Promise.all([
+    getTransactions(),
+    getCategories(),
+    getItems(),
+  ]);
+  const categories = categoryRows.map((c) => ({ id: c.id, name: c.name }));
+  const items = itemRows.map((i) => ({ id: i.id, name: i.name, categoryId: i.categoryId }));
 
   const initialCategoryId = params.categoryId ? Number(params.categoryId) : undefined;
 

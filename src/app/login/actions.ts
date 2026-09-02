@@ -24,7 +24,8 @@ export async function loginAction(
     return { error: "Username dan password wajib diisi." };
   }
 
-  const admin = db.select().from(admins).all().find((a) => a.username === username);
+  const adminRows = await db.select().from(admins);
+  const admin = adminRows.find((a) => a.username === username);
 
   if (!admin) {
     return { error: "Kredensial tidak valid." };

@@ -14,8 +14,8 @@ export default async function NewTransactionPage({
   searchParams: Promise<{ categoryId?: string; itemId?: string }>;
 }) {
   const params = await searchParams;
-  const categories = getCategories().map((c) => ({ id: c.id, name: c.name }));
-  const items = getItems();
+  const [categoryRows, items] = await Promise.all([getCategories(), getItems()]);
+  const categories = categoryRows.map((c) => ({ id: c.id, name: c.name }));
 
   const itemsByCategory = new Map<number, typeof items>();
   for (const item of items) {

@@ -36,23 +36,22 @@ export async function upsertItem(
 
   const { id, categoryId, name, unit } = parsed.data;
 
-  const categoryExists = db
+  const [categoryExists] = await db
     .select()
     .from(categories)
-    .where(eq(categories.id, categoryId))
-    .get();
+    .where(eq(categories.id, categoryId));
 
   if (!categoryExists) {
     return { error: "Kategori tidak ditemukan." };
   }
 
   if (id) {
-    db.update(items)
+    await db
+      .update(items)
       .set({ categoryId, name, unit: unit || null })
-      .where(eq(items.id, id))
-      .run();
+      .where(eq(items.id, id));
   } else {
-    db.insert(items).values({ categoryId, name, unit: unit || null }).run();
+    await db.insert(items).values({ categoryId, name, unit: unit || null });
   }
 
   revalidatePath("/app/items");
@@ -67,11 +66,9 @@ export async function deleteItem(
   const id = Number(formData.get("id"));
   if (!id) return { error: "Barang tidak ditemukan." };
 
-  const txnCount = db
-    .select()
-    .from(transactions)
-    .where(eq(transactions.itemId, id))
-    .all().length;
+  const txnCount = (
+    await db.select().from(transactions).where(eq(transactions.itemId, id))
+  ).length;
 
   if (txnCount > 0) {
     return {
@@ -79,7 +76,7 @@ export async function deleteItem(
     };
   }
 
-  db.delete(items).where(eq(items.id, id)).run();
+  await db.delete(items).where(eq(items.id, id));
   revalidatePath("/app/items");
   revalidatePath("/app/dashboard");
   return { success: true };
@@ -112,11 +109,10 @@ export async function addItemInline(
   }
 
   const { categoryId, name, unit } = parsed.data;
-  const inserted = db
+  const [inserted] = await db
     .insert(items)
     .values({ categoryId, name, unit: unit || null })
-    .returning({ id: items.id, name: items.name })
-    .get();
+    .returning({ id: items.id, name: items.name });
 
   revalidatePath("/app/items");
   revalidatePath("/app/dashboard");
